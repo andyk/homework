@@ -13,16 +13,19 @@ on your laptop do the following:
 
 Note that running this project without any entry point specified defaults to the
 "main" entry point which:
-    (a) Generates expert data that we will use to do behavior cloning.
-        Runs 5 rollouts using OpenAI Gym with Humanoid-v2 env and the expert
-        policy (a trained TensorFlow neural net) provided by the Berkeley CS294-112 
-        staff (in the hw1 `experts` dir). See `run_expert.py`.
-    (b) Performs behavior cloning by training a deep net.
-        Trains a 4 layer Keras deep neural network (all Dense layers), but
-        first standardizes the data (mean center, normalize by std)
-    (c) Runs 5 new Rollouts of the same gym env, this time though uses our
-        newly trained deep net to make decision about which action to take
-        based on the observation it receives from env at each step.
+
+1) Generates expert data that we will use to do behavior cloning.
+   Runs 5 rollouts using OpenAI Gym with Humanoid-v2 env and the expert
+   policy (a trained TensorFlow neural net) provided by the Berkeley CS294-112 
+   staff (in the hw1 `experts` dir). See `run_expert.py`.
+        
+2) Performs behavior cloning by training a deep net.
+   Trains a 4 layer Keras deep neural network (all Dense layers), but
+   first standardizes the data (mean center, normalize by std)
+        
+3) Runs 5 new Rollouts of the same gym env, this time though uses our
+   newly trained deep net to make decision about which action to take
+   based on the observation it receives from env at each step.
 
 See `main.py` to see the MLflow worklflow defined.
 
