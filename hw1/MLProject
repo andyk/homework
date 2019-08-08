@@ -20,3 +20,6 @@ entry_points:
       behavior_clone_training_run_id: string
       render: {type: string, default: false}
     command: "python run_imitator.py {envname} {behavior_clone_training_run_id} --render {render}"
+
+  main:
+    command: "python main.py"

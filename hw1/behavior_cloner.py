@@ -32,9 +32,6 @@ with open(expert_data_file_full_path, 'rb') as f:
     data = pickle.loads(f.read())
     expert_observations = data['observations']
     expert_actions = data['actions']
-    # Make sure actions need reshaping -- NOPE! diff shape for diff envs
-    #assert expert_actions.shape[1:] == (1, 17), expert_actions.shape[1:]
-
     # Reshape actions
     expert_actions = expert_actions.reshape((expert_actions.shape[0], expert_actions.shape[2]))
 
@@ -53,6 +50,7 @@ print(expert_observations[0])
 print(expert_observations.shape)
 print(type(expert_observations.shape))
 print(expert_actions.shape)
+
 
 # ====================================================
 # Build the model

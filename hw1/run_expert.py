@@ -9,15 +9,18 @@ Example usage:
 Author of this script and included expert policies: Jonathan Ho (hoj@openai.com)
 """
 
+from utils import str2bool
 import os
 import pickle
 import tensorflow as tf
 import numpy as np
 import tf_util
 import gym
-from time import time
 import load_policy
 import mlflow
+from gym import wrappers
+from time import time
+
 
 def main():
     with mlflow.start_run(run_name="Gen Expert Data"):
@@ -25,7 +28,7 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('expert_policy_file', type=str)
         parser.add_argument('envname', type=str)
-        parser.add_argument('--render', action='store_true')
+        parser.add_argument('--render', type=str2bool, nargs='?', const=True, default=False)
         parser.add_argument("--max_timesteps", type=int)
         parser.add_argument('--num_rollouts', type=int, default=20,
                             help='Number of expert roll outs')
@@ -39,18 +42,17 @@ def main():
 
         with tf.Session():
             tf_util.initialize()
-
-            env = gym.make(args.envname)
-            from gym import wrappers
-            #env = wrappers.Monitor(env, './videos/' + str(time()) + "/", force=True)
-            max_steps = args.max_timesteps or env.spec.max_episode_steps
-            print("max_steps set to {0}".format(max_steps))
-
             returns = []
             observations = []
             actions = []
             steps = []
             for i in range(args.num_rollouts):
+                env = gym.make(args.envname)
+                if args.render:
+                    video_dir = "./videos/{0}/".format(time())
+                    env = wrappers.Monitor(env, video_dir, force=True)
+                max_steps = args.max_timesteps or env.spec.max_episode_steps
+                print("max_steps set to {0}".format(max_steps))
                 print('iter', i)
                 obs = env.reset()
                 done = False
@@ -65,14 +67,16 @@ def main():
                     totalr += r
                     trial_steps += 1
                     if args.render:
-                        env.render()
+                        env.render(mode='rgb_array')
                     if trial_steps % 100 == 0: print("%i/%i"%(trial_steps, max_steps))
                     if trial_steps >= max_steps:
                         print("hit max_steps")
                         break
                 returns.append(totalr)
                 steps.append(trial_steps)
-            env.close()
+                env.close()
+                if args.render:
+                    mlflow.log_artifacts(video_dir)
 
             for s in steps:
                 mlflow.log_metric('steps', s)
