@@ -1,7 +1,7 @@
 # Andy Konwinski's solution to CS294-112 HW 2: Imitation Learning
 
 This directory is an MLflow project. It is a multi-step workflow, which
-means that there are 4 entry points defined in in the MLProject file.
+means that there are 4 entry points defined in the MLProject file.
 
 You should be able to use reproduce my results on your laptop using
 MLflow Project feature. To run all 3 stages of the homework solution
