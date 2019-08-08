@@ -14,6 +14,11 @@ on your laptop do the following:
    ~/.mujoco dir.
 3) install MLflow: `pip install mlflow`
 4) use MLflow Run to reproduce my results: `mlflow run git@github.com:andyk/homework.git#hw1`
+5) view the results in MLflow's UI. From the same dir you called `mlflow run` inside,
+   call `mlflow ui`. You will see a Run that you can expand to see the multiple
+   child runs under. In each stage, you can view the artifacts captured. For MP4 videos,
+   you can click on the mp4 artifact and then copy and past the path and then
+   open that video (e.g. in your terminal run `open [paste path of mp4 file]`).
 
 Note that running this project without any entry point specified defaults to the
 "main" entry point which:
