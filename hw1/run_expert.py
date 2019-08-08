@@ -88,6 +88,8 @@ def main():
             expert_data = {'observations': np.array(observations),
                            'actions': np.array(actions)}
 
+            if not os.path.exists('expert_data'):
+                os.makedirs('expert_data')
             filename = os.path.join('expert_data', args.envname + '.pkl')
             with open((filename), 'wb') as f:
                 pickle.dump(expert_data, f, pickle.HIGHEST_PROTOCOL)

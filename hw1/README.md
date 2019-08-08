@@ -8,8 +8,12 @@ MLflow Project feature. To run all 3 stages of the homework solution
 on your laptop do the following:
 
 1) make sure you have installed git and conda (used for reproducibility in MLflow)
-2) install MLflow: `pip install mlflow`
-3) use MLflow Run to reproduce my results: `mlflow run git@github.com:andyk/homework.git#hw1`
+2) install mujoco 1.5.0 physics simulator. I'm using a free 30day trial license, and i downloaded 
+   a zip from the main mujoco website at https://www.roboti.us/download/mjpro150_osx.zip and
+   unpipped that into ~/.mujoco and also put my 30day license file, i.e., `mjkey.txt`, in that same
+   ~/.mujoco dir.
+3) install MLflow: `pip install mlflow`
+4) use MLflow Run to reproduce my results: `mlflow run git@github.com:andyk/homework.git#hw1`
 
 Note that running this project without any entry point specified defaults to the
 "main" entry point which:
@@ -28,6 +32,13 @@ Note that running this project without any entry point specified defaults to the
    based on the observation it receives from env at each step.
 
 See `main.py` to see the MLflow worklflow defined.
+
+I saw a couple of errors when i originally installed gym and tried
+capturing videos of my rollouts that I think required to install a
+couple of dependencies on my Macbook Pro. You may need to do the same.
+I think one of them was GCCv6 (for the mujoco simulator) and one was
+some video dependency for rending mp4s. I *think* I installed both via
+brew per a little googling or instructions in the errrors.
 
 You can also run the individual stages of the multi-step workflow manually one
 at a time by calling mlflow run with each of the three entry points in succession
