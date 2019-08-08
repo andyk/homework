@@ -15,62 +15,80 @@ import tensorflow as tf
 import numpy as np
 import tf_util
 import gym
+from time import time
 import load_policy
+import mlflow
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('expert_policy_file', type=str)
-    parser.add_argument('envname', type=str)
-    parser.add_argument('--render', action='store_true')
-    parser.add_argument("--max_timesteps", type=int)
-    parser.add_argument('--num_rollouts', type=int, default=20,
-                        help='Number of expert roll outs')
-    args = parser.parse_args()
+    with mlflow.start_run(run_name="Gen Expert Data"):
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument('expert_policy_file', type=str)
+        parser.add_argument('envname', type=str)
+        parser.add_argument('--render', action='store_true')
+        parser.add_argument("--max_timesteps", type=int)
+        parser.add_argument('--num_rollouts', type=int, default=20,
+                            help='Number of expert roll outs')
+        args = parser.parse_args()
+        for k, v in vars(args).items():
+            mlflow.log_param(k, v)
 
-    print('loading and building expert policy')
-    policy_fn = load_policy.load_policy(args.expert_policy_file)
-    print('loaded and built')
+        print('loading and building expert policy')
+        policy_fn = load_policy.load_policy(args.expert_policy_file)
+        print('loaded and built')
 
-    with tf.Session():
-        tf_util.initialize()
+        with tf.Session():
+            tf_util.initialize()
 
-        import gym
-        env = gym.make(args.envname)
-        max_steps = args.max_timesteps or env.spec.timestep_limit
+            env = gym.make(args.envname)
+            from gym import wrappers
+            #env = wrappers.Monitor(env, './videos/' + str(time()) + "/", force=True)
+            max_steps = args.max_timesteps or env.spec.max_episode_steps
+            print("max_steps set to {0}".format(max_steps))
 
-        returns = []
-        observations = []
-        actions = []
-        for i in range(args.num_rollouts):
-            print('iter', i)
-            obs = env.reset()
-            done = False
-            totalr = 0.
-            steps = 0
-            while not done:
-                action = policy_fn(obs[None,:])
-                observations.append(obs)
-                actions.append(action)
-                obs, r, done, _ = env.step(action)
-                totalr += r
-                steps += 1
-                if args.render:
-                    env.render()
-                if steps % 100 == 0: print("%i/%i"%(steps, max_steps))
-                if steps >= max_steps:
-                    break
-            returns.append(totalr)
+            returns = []
+            observations = []
+            actions = []
+            steps = []
+            for i in range(args.num_rollouts):
+                print('iter', i)
+                obs = env.reset()
+                done = False
+                totalr = 0.
+                trial_steps = 0
+                while not done:
+                    action = policy_fn(obs[None,:])
+                    #action = env.action_space.sample()
+                    observations.append(obs)
+                    actions.append(action)
+                    obs, r, done, _ = env.step(action)
+                    totalr += r
+                    trial_steps += 1
+                    if args.render:
+                        env.render()
+                    if trial_steps % 100 == 0: print("%i/%i"%(trial_steps, max_steps))
+                    if trial_steps >= max_steps:
+                        print("hit max_steps")
+                        break
+                returns.append(totalr)
+                steps.append(trial_steps)
+            env.close()
 
-        print('returns', returns)
-        print('mean return', np.mean(returns))
-        print('std of return', np.std(returns))
+            for s in steps:
+                mlflow.log_metric('steps', s)
+            for r in returns:
+                mlflow.log_metric('returns', r)
+            mlflow.log_metric('mean return', np.mean(returns))
+            mlflow.log_metric('std of return', np.std(returns))
 
-        expert_data = {'observations': np.array(observations),
-                       'actions': np.array(actions)}
+            expert_data = {'observations': np.array(observations),
+                           'actions': np.array(actions)}
 
-        with open(os.path.join('expert_data', args.envname + '.pkl'), 'wb') as f:
-            pickle.dump(expert_data, f, pickle.HIGHEST_PROTOCOL)
+            filename = os.path.join('expert_data', args.envname + '.pkl')
+            with open((filename), 'wb') as f:
+                pickle.dump(expert_data, f, pickle.HIGHEST_PROTOCOL)
+            mlflow.log_artifact(filename, artifact_path="expert_data_file")
+
 
 if __name__ == '__main__':
     main()

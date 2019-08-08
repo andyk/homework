@@ -1,0 +1,22 @@
+name: berkeley-deep-rl-hw1
+
+conda_env: conda.yaml
+
+entry_points:
+  generate_expert_data:
+    parameters:
+      expert_policy_file: string
+      envname: string
+    command: "python run_expert.py {expert_policy_file} {envname}"
+
+  train_behavior_clone:
+    parameters:
+      expert_run_id: string
+    command: "python behavior_cloner.py {expert_run_id}"
+
+  run_imitator:
+    parameters:
+      envname: string
+      behavior_clone_training_run_id: string
+      render: {type: string, default: false}
+    command: "python run_imitator.py {envname} {behavior_clone_training_run_id} --render {render}"
