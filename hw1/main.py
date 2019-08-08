@@ -83,10 +83,11 @@ def _get_or_run(entrypoint, parameters, git_commit, use_cache=True):
 @click.command()
 @click.option("--envname", default="Humanoid-v2", type=str)
 @click.option("--expert_policy_file", default="experts/Humanoid-v2.pkl", type=str)
-@click.option("--render", default="True", type=str)
+@click.option("--render_expert", default="False", type=str)
+@click.option("--render_bc", default="True", type=str)
 @click.option("--num_expert_rollouts", default=5, type=int)
 @click.option("--num_bc_trials", default=1, type=int)
-def workflow(envname, expert_policy_file, render, num_expert_rollouts, num_bc_trials):
+def workflow(envname, expert_policy_file, render_expert, render_bc, num_expert_rollouts, num_bc_trials):
     # Note: The entrypoint names are defined in MLproject.
     with mlflow.start_run(run_name="HW1 Main Entry Point") as active_run:
         os.environ['SPARK_CONF_DIR'] = os.path.abspath('.')
@@ -96,7 +97,7 @@ def workflow(envname, expert_policy_file, render, num_expert_rollouts, num_bc_tr
                                                {"expert_policy_file": expert_policy_file,
                                                 "envname": envname,
                                                 "num_rollouts": num_expert_rollouts,
-                                                "render": render},
+                                                "render": render_expert},
                                                git_commit)
 
         train_behavior_clone_run = _get_or_run("train_behavior_clone",
@@ -107,7 +108,7 @@ def workflow(envname, expert_policy_file, render, num_expert_rollouts, num_bc_tr
                                        {"behavior_clone_training_run_id": train_behavior_clone_run.info.run_id,
                                         "envname": envname,
                                         "num_rollouts": num_bc_trials,
-                                        "render": render},
+                                        "render": render_bc},
                                        git_commit)
 
 if __name__ == '__main__':
