@@ -27,23 +27,22 @@ Note that running this project without any entry point specified defaults to the
    Runs 5 rollouts using OpenAI Gym with Humanoid-v2 env and the expert
    policy (a trained TensorFlow neural net) provided by the Berkeley CS294-112 
    staff (in the hw1 `experts` dir). See `run_expert.py`.
-        
+
 2) Performs behavior cloning by training a deep net.
    Trains a 4 layer Keras deep neural network (all Dense layers), but
    first standardizes the data (mean center, normalize by std)
-        
+
 3) Runs 5 new Rollouts of the same gym env, this time though uses our
    newly trained deep net to make decision about which action to take
    based on the observation it receives from env at each step.
 
 See `main.py` to see the MLflow worklflow defined.
 
-I saw a couple of errors when i originally installed gym and tried
-capturing videos of my rollouts that I think required to install a
-couple of dependencies on my Macbook Pro. You may need to do the same.
-I think one of them was GCCv6 (for the mujoco simulator) and one was
-some video dependency for rending mp4s. I *think* I installed both via
-brew per a little googling or instructions in the errrors.
+I also encountered 2 other system dependencies outside of pip, which I installed
+with brew on my Macbook Pro:
+
+* This version of Mujoco needed `brew install gcc@6`
+* Gym needed `brew install ffmpeg` to be able to save mp4 videos of the trial runs
 
 You can also run the individual stages of the multi-step workflow manually one
 at a time by calling mlflow run with each of the three entry points in succession
