@@ -5,10 +5,8 @@ import argparse
 import pickle
 import os
 import sys
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
-from tensorflow import keras
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 import mlflow.tensorflow
 import gym
@@ -19,6 +17,8 @@ from tqdm import tqdm
 import logging
 from hollygrimm_model import Model
 
+# The following doesn't seem to work with the way Holly Grimm builds her tensorflow model.
+mlflow.tensorflow.autolog()
 
 def config_logging(log_file):
     if os.path.exists(log_file):
@@ -52,18 +52,12 @@ def create_model(session, obs_samples, num_observations, num_actions, logger, op
 
 def bc(expert_data_filename, env_name, restore, results_dir, max_timesteps=None,
        optimizer='adam', num_epochs=100, learning_rate=.001, batch_size=32, keep_prob=1):
+    # Reset TF env
     tf.reset_default_graph()
 
+    # Create a gym env.
     env = gym.make(env_name)
     max_steps = max_timesteps or env.spec.max_episode_steps
-
-    #Andy's
-    #with open(expert_data_filename, 'rb') as f:
-    #    data = pickle.loads(f.read())
-    #    expert_observations = data['observations']
-    #    expert_actions = data['actions']
-    #    # Reshape actions
-    #    expert_actions = expert_actions.reshape((expert_actions.shape[0], expert_actions.shape[2]))
 
     with open(expert_data_filename, 'rb') as f:
         data = pickle.loads(f.read())
@@ -82,6 +76,7 @@ def bc(expert_data_filename, env_name, restore, results_dir, max_timesteps=None,
                              optimizer, learning_rate, restore, results_dir)
 
         file_writer = tf.summary.FileWriter(results_dir, session.graph)
+        #file_writer = tf.summary.FileWriter(results_dir, session.graph)
 
         for epoch in tqdm(range(num_epochs)):
             perm = np.random.permutation(x_train.shape[0])
@@ -102,19 +97,22 @@ def bc(expert_data_filename, env_name, restore, results_dir, max_timesteps=None,
                                                        epoch, batch_size, min_val_loss, results_dir)
             file_writer.add_summary(validation_scalar, epoch)
 
+            # Test the updated model after each epoch of training the DNN.
             new_exp = model.test_run(session, env, max_steps)
             tqdm.write(
-                "Epoch %3d Loss %f Reward %f" % (epoch, loss / num_samples, new_exp['reward']))
+                "Epoch %3d; Loss %f; Reward %f; Steps %d" % (epoch, loss / num_samples,
+                                                             new_exp['reward'], new_exp['steps']))
 
+        # Write a video of the final gym test results.
         env = wrappers.Monitor(env, results_dir, force=True)
 
         results = []
         for _ in tqdm(range(10)):
             results.append(model.test_run(session, env, max_steps)['reward'])
-        logger.info("Reward mean and std dev with behavior cloning: %f(%f)" % (
-        np.mean(results), np.std(results)))
+        logger.info("Reward mean and std dev with behavior cloning: %f(%f)" % (np.mean(results),
+                                                                               np.std(results)))
         mlflow.log_params({"reward_mean": np.mean(results), "reward_std": np.std(results)})
-    return data['mean_return'], data['std_return'], np.mean(results), np.std(results)
+    return np.mean(results), np.std(results)
 
 
 def validate(model, logger, session, x_test, y_test, num_epoch, batch_size, min_loss, checkpoint_dir):
@@ -134,7 +132,6 @@ def validate(model, logger, session, x_test, y_test, num_epoch, batch_size, min_
 
 
 if __name__ == "__main__":
-    mlflow.tensorflow.autolog()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('expert_run_id', type=str)
@@ -172,13 +169,13 @@ if __name__ == "__main__":
     env_name = mlflow_c.get_run(args.expert_run_id).data.params["envname"]
 
     bc_results_dir = os.path.join(os.getcwd(), 'results', env_name, 'bc')
-    ex_mean, ex_std, bc_mean, bc_std = bc(expert_data_filename, env_name, args.restore,
-                                          bc_results_dir, batch_size=args.batch_size,
-                                          num_epochs=args.num_epochs)
+    bc_reward_mean, bc_reward_std = bc(expert_data_filename, env_name, args.restore, bc_results_dir,
+                                       batch_size=args.batch_size, num_epochs=args.num_epochs)
 
-    logger.info('Env: %s, Expert: %f(%f), Behavior Cloning mean & std rewards: %f(%f))' %
-                (env_name, ex_mean, ex_std, bc_mean, bc_std))
-    mlflow.log_artifact(log_file)
+    logger.info('Behavior Cloning mean & std rewards: %f(%f))' %
+                (bc_reward_mean, bc_reward_std))
+    print("logging 'results' directory to mlflow.")
+    mlflow.log_artifacts('results')
 
     # Commenting out dagger for now.
     #da_results_dir = os.path.join(os.getcwd(), 'results', env_name, 'da')

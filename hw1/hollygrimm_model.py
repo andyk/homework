@@ -2,7 +2,8 @@
 # her results: https://github.com/hollygrimm/cs294-homework/blob/master/hw1/models/bc_model.py
 import os
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 import tensorflow.contrib.slim as slim
 import itertools
 
@@ -144,17 +145,20 @@ class Model:
         obvs = []
         actions = []
         reward = 0.
+        steps = 0
 
         obv = env.reset()
-        for steps in itertools.count():
+        for step_num in itertools.count():
             obvs.append(obv)
             actions.append(self.predict(sess, np.expand_dims(obv, axis=0))[0])
             obv, r, done, _ = env.step(actions[-1])
             reward += r
-            if steps >= max_steps or done:
+            steps += 1
+            if step_num >= max_steps or done:
                 break
 
         experience = {'observations': np.stack(obvs, axis=0),
                       'actions': np.squeeze(np.stack(actions, axis=0)),
-                      'reward': reward}
+                      'reward': reward,
+                      'steps': steps}
         return experience
