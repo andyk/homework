@@ -14,6 +14,11 @@ entry_points:
       expert_run_id: string
     command: "python behavior_cloner.py {expert_run_id}"
 
+  train_behavior_clone_holly_grimm:
+    parameters:
+      expert_run_id: string
+    command: "python hollygrimm_behavior_cloner.py {expert_run_id}"
+
   run_imitator:
     parameters:
       envname: string

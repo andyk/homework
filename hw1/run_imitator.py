@@ -1,7 +1,6 @@
 import argparse
 import gym
 from gym import wrappers
-import mlflow.keras
 import mlflow
 from utils import str2bool
 import numpy as np
@@ -14,13 +13,21 @@ with mlflow.start_run(run_name="Imitator Series"):
     parser.add_argument('--render', type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument('--num_rollouts', type=int, default=5)
     parser.add_argument('--max_timesteps', type=int)
+    parser.add_argument('--model_type', type=str, default="keras")
     args = parser.parse_args()
     for k, v in vars(args).items():
         mlflow.log_param(k, v)
 
     mlflow_model_uri = "runs:/" + args.behavior_clone_training_run_id + "/model"
-    print("loading cloned behavior model from mlflow")
-    model = mlflow.keras.load_model(mlflow_model_uri)
+    if args.model_type.lower() == "keras":
+        import mlflow.keras
+        print("loading cloned keras behavior model from mlflow")
+        model = mlflow.keras.load_model(mlflow_model_uri)
+    elif args.model_type.lower() == "tf" or args.model_type.lower() == "tensorflow":
+        import mlflow.tensorflow
+        print("loading cloned tensorflow behavior model from mlflow")
+        model = mlflow.tensorflow.load_model(mlflow_model_uri)
+
 
     returns = []
 

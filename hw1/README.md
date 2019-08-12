@@ -45,7 +45,7 @@ with brew on my Macbook Pro:
 * Gym needed `brew install ffmpeg` to be able to save mp4 videos of the trial runs
 
 You can also run the individual stages of the multi-step workflow manually one
-at a time by calling mlflow run with each of the three entry points in succession
+at a time by calling `mlflow run` with each of the three entry points in succession
 with appropriate parameters (the 2nd two stages take as input the run_id of the
 previous stage so that they can download the output files from the previous
 stage), e.g.:
