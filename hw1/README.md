@@ -1,4 +1,4 @@
-# Andy Konwinski's solution to CS294-112 HW 2: Imitation Learning
+# Andy Konwinski's solution to CS294-112 HW 1: Imitation Learning
 
 This directory is an MLflow project. It is a multi-step workflow, which
 means that there are 4 entry points defined in the MLProject file, one
